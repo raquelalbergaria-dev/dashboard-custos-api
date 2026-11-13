@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Custos API • Lançamentos/26</title>
+<style>
+*{box-sizing:border-box} body{margin:0;background:#f4f6f8;color:#17212b;font-family:Inter,Arial,sans-serif}
+.wrap{max-width:1400px;margin:0 auto;padding:28px 34px 40px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:20px}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:1.8px;color:#536a80;text-transform:uppercase}
+h1{margin:6px 0 4px;font-size:28px;line-height:1.1} .sub{color:#667085;font-size:13px}
+.range{background:#fff;border:1px solid #e3e8ee;border-radius:14px;padding:10px 14px;font-size:11px;color:#52606d;text-align:center}
+.filters{display:flex;gap:10px;margin:22px 0 18px} select{background:#fff;border:1px solid #cfd7df;border-radius:10px;padding:10px 13px;font-size:12px;color:#17212b}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.card,.panel{background:#fff;border:1px solid #e4e8ed;border-radius:16px;box-shadow:0 4px 14px rgba(15,23,42,.04)}
+.card{padding:17px 16px;min-height:102px} .label{font-size:9px;font-weight:800;letter-spacing:1.4px;color:#667085}
+.value{font-size:24px;font-weight:850;margin-top:9px} .hint{font-size:10px;color:#8a94a3;margin-top:5px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.panel{padding:18px} .panel h2{font-size:14px;margin:0 0 4px} .panel p{font-size:11px;color:#667085;margin:0 0 15px}
+.barrow{display:grid;grid-template-columns:110px 1fr 95px;align-items:center;gap:10px;margin:10px 0;font-size:11px}
+.barbg{height:12px;background:#edf1f5;border-radius:99px;overflow:hidden} .bar{height:100%;background:#17212b;border-radius:99px}
+.bar.alt{background:#58708a} .num{text-align:right;font-weight:700}
+.insight{margin-top:14px;background:#17212b;color:#fff;border-radius:16px;padding:18px 20px}
+.insight .label{color:#aebdcb} .insight p{margin:8px 0 0;font-size:13px;line-height:1.5}
+.tablewrap{margin-top:14px;overflow:auto} table{width:100%;border-collapse:collapse;font-size:10px}
+th{text-align:left;color:#667085;font-size:8px;letter-spacing:1px;padding:11px 8px;border-bottom:1px solid #e5e9ee}
+td{padding:10px 8px;border-bottom:1px solid #eef1f4;white-space:nowrap} td.num{text-align:right}
+tbody tr:hover{background:#fafbfc} .receptivo{font-weight:800}
+.note{font-size:9px;color:#8a94a3;margin-top:12px;line-height:1.5}
+@media(max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}.wrap{padding:20px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <div class="eyebrow">CRM • API • LANÇAMENTOS/26</div>
+      <h1>Custos e volume de comunicação</h1>
+      <div class="sub">Visão executiva da operação de CRM • baseada na planilha WFIA</div>
+    </div>
+    <div class="range">Base atualizada<br><b>13/10 → 11/11/2026</b></div>
+  </div>
+
+  <div class="filters">
+    <select id="stageFilter"><option value="">Todas as etapas</option></select>
+    <select id="dateFilter"><option value="">Todas as datas</option></select>
+  </div>
+
+  <div class="kpis">
+    <div class="card"><div class="label">CUSTO TOTAL</div><div class="value" id="kCost"></div><div class="hint">soma dos custos da planilha</div></div>
+    <div class="card"><div class="label">VOLUME TOTAL</div><div class="value" id="kVol"></div><div class="hint">inclui Receptivo + Template + MSG 2 + J24</div></div>
+    <div class="card"><div class="label">CUSTO / 1.000</div><div class="value" id="kK"></div><div class="hint">custo médio da base</div></div>
+    <div class="card"><div class="label">MAIOR CUSTO</div><div class="value" id="kTop"></div><div class="hint" id="kTopHint"></div></div>
+    <div class="card"><div class="label">ETAPAS</div><div class="value" id="kStages"></div><div class="hint">categorias com volume</div></div>
+  </div>
+
+  <div class="grid2">
+    <div class="panel"><h2>Custo por etapa</h2><p>Onde o orçamento de CRM está sendo consumido</p><div id="costBars"></div></div>
+    <div class="panel"><h2>Volume por etapa</h2><p>Concentração do volume de mensagens</p><div id="volBars"></div></div>
+  </div>
+
+  <div class="insight"><div class="label">LEITURA EXECUTIVA</div><p id="insight"></p></div>
+
+  <div class="panel tablewrap">
+    <h2>Resumo por etapa</h2><p>Volume, custo e eficiência</p>
+    <table><thead><tr><th>ETAPA</th><th>TEMPLATE</th><th>MSG 2</th><th>J24</th><th>VOLUME</th><th>CUSTO</th><th>CUSTO / 1K</th><th>% CUSTO</th></tr></thead>
+    <tbody id="stageTable"></tbody></table>
+  </div>
+
+  <div class="panel tablewrap">
+    <h2>Detalhamento diário</h2><p>Use os filtros acima para investigar uma etapa ou data específica</p>
+    <table><thead><tr><th>ETAPA</th><th>DATA</th><th>TEMPLATE</th><th>MSG 2</th><th>J24</th><th>VOLUME</th><th>CUSTO</th></tr></thead>
+    <tbody id="dailyTable"></tbody></table>
+  </div>
+
+  <div class="note">
+    Fonte: arquivo “CUSTOS API _ LANÇAMENTOS_26 - WFIA”. Linhas de subtotal (“ETAPA” e “Total”) da planilha não são consideradas como etapas do painel. <b>Receptivo</b> aparece no resumo da planilha com custo de R$ 2.808,40 e, como a base mantém custo de R$ 0,05 por mensagem, foi incorporado ao volume total como <b>56.168 mensagens</b>. Assim, o volume total do painel é <b>1.626.962</b>.
+  </div>
+</div>
+
+<script>
+const DATA = {"rows": [{"etapa": "Captação", "data": "13/10/2026", "template": 117112, "msg2": 5094, "j24": 0, "volume": 122206, "custo": 6110.3}, {"etapa": "Captação", "data": "14/10/2026", "template": 0, "msg2": 0, "j24": 15054, "volume": 15054, "custo": 752.7}, {"etapa": "Captação", "data": "20/10/2026", "template": 84166, "msg2": 10392, "j24": 0, "volume": 94558, "custo": 4727.9}, {"etapa": "Captação", "data": "21/10/2026", "template": 0, "msg2": 0, "j24": 14068, "volume": 14068, "custo": 703.4}, {"etapa": "Captação", "data": "26/10/2026", "template": 79366, "msg2": 0, "j24": 0, "volume": 79366, "custo": 3968.3}, {"etapa": "Captação", "data": "27/10/2026", "template": 0, "msg2": 0, "j24": 2630, "volume": 2630, "custo": 131.5}, {"etapa": "Captação", "data": "01/11/2026", "template": 76185, "msg2": 0, "j24": 0, "volume": 76185, "custo": 3809.25}, {"etapa": "Captação", "data": "02/11/2026", "template": 0, "msg2": 0, "j24": 3293, "volume": 3293, "custo": 164.65}, {"etapa": "Lembrete", "data": "19/10/2026", "template": 28982, "msg2": 3182, "j24": 0, "volume": 32164, "custo": 1608.2}, {"etapa": "Lembrete", "data": "27/10/2026", "template": 48732, "msg2": 3894, "j24": 0, "volume": 52626, "custo": 2631.3}, {"etapa": "Lembrete", "data": "29/10/2026", "template": 54622, "msg2": 6236, "j24": 0, "volume": 60858, "custo": 3042.9}, {"etapa": "Lembrete", "data": "31/10/2026", "template": 59127, "msg2": 3554, "j24": 0, "volume": 62681, "custo": 3134.05}, {"etapa": "Lembrete", "data": "02/11/2026", "template": 56493, "msg2": 4492, "j24": 0, "volume": 60985, "custo": 3049.25}, {"etapa": "Evento", "data": "03/11/2026", "template": 138712, "msg2": 18020, "j24": 47776, "volume": 204508, "custo": 10225.4}, {"etapa": "Evento", "data": "04/11/2026", "template": 138720, "msg2": 10707, "j24": 52116, "volume": 201543, "custo": 10077.15}, {"etapa": "Evento", "data": "05/11/2026", "template": 136428, "msg2": 6360, "j24": 28442, "volume": 171230, "custo": 8561.5}, {"etapa": "Carrinho", "data": "05/11/2026", "template": 68548, "msg2": 5072, "j24": 0, "volume": 73620, "custo": 3681.0}, {"etapa": "Carrinho", "data": "06/11/2026", "template": 67397, "msg2": 1543, "j24": 19588, "volume": 88528, "custo": 4426.4}, {"etapa": "Live Zoom", "data": "06/11/2026", "template": 66755, "msg2": 2181, "j24": 0, "volume": 68936, "custo": 3446.8}, {"etapa": "Carrinho", "data": "07/11/2026", "template": 0, "msg2": 0, "j24": 4257, "volume": 4257, "custo": 212.85}, {"etapa": "Carrinho", "data": "09/11/2026", "template": 21176, "msg2": 1614, "j24": 0, "volume": 22790, "custo": 1139.5}, {"etapa": "Carrinho", "data": "10/11/2026", "template": 0, "msg2": 0, "j24": 1483, "volume": 1483, "custo": 74.15}, {"etapa": "Live Semanal", "data": "10/11/2026", "template": 18077, "msg2": 1238, "j24": 0, "volume": 19315, "custo": 965.75}, {"etapa": "Live Zoom", "data": "11/11/2026", "template": 36186, "msg2": 1724, "j24": 0, "volume": 37910, "custo": 1895.5}, {"etapa": "Receptivo", "data": "R$ 2 808,40", "template": 0, "msg2": 0, "j24": 0, "volume": 0, "custo": 0.0}, {"etapa": "Captação", "data": "R$ 20 368,00", "template": 0, "msg2": 0, "j24": 0, "volume": 0, "custo": 0.0}, {"etapa": "Lembrete", "data": "R$ 13 465,70", "template": 0, "msg2": 0, "j24": 0, "volume": 0, "custo": 0.0}, {"etapa": "Evento", "data": "R$ 28 864,05", "template": 0, "msg2": 0, "j24": 0, "volume": 0, "custo": 0.0}, {"etapa": "Carrinho", "data": "R$ 9 533,90", "template": 0, "msg2": 0, "j24": 0, "volume": 0, "custo": 0.0}, {"etapa": "Live Semanal", "data": "R$ 965,75", "template": 0, "msg2": 0, "j24": 0, "volume": 0, "custo": 0.0}, {"etapa": "Live Zoom", "data": "R$ 5 342,30", "template": 0, "msg2": 0, "j24": 0, "volume": 0, "custo": 0.0}], "stages": [{"etapa": "Evento", "template": 413860, "msg2": 35087, "j24": 128334, "volume": 577281, "custo": 28864.05, "pct": 35.5}, {"etapa": "Captação", "template": 356829, "msg2": 15486, "j24": 35045, "volume": 407360, "custo": 20368.0, "pct": 25.0}, {"etapa": "Lembrete", "template": 247956, "msg2": 21358, "j24": 0, "volume": 269314, "custo": 13465.7, "pct": 16.6}, {"etapa": "Carrinho", "template": 157121, "msg2": 8229, "j24": 25328, "volume": 190678, "custo": 9533.9, "pct": 11.7}, {"etapa": "Live Zoom", "template": 102941, "msg2": 3905, "j24": 0, "volume": 106846, "custo": 5342.3, "pct": 6.6}, {"etapa": "Receptivo", "template": 0, "msg2": 0, "j24": 0, "volume": 56168, "custo": 2808.4, "pct": 3.5}, {"etapa": "Live Semanal", "template": 18077, "msg2": 1238, "j24": 0, "volume": 19315, "custo": 965.75, "pct": 1.2}], "totalCost": 81348.1, "totalVolume": 1626962, "costPer1000": 50.0, "receptivoVolume": 56168, "dateRange": "13/10 → 11/11/2026"};
+const fmtInt = n => new Intl.NumberFormat('pt-BR').format(Math.round(n));
+const fmtMoney = n => 'R$ ' + Number(n).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const VALID_STAGES = ['Evento','Captação','Lembrete','Carrinho','Live Zoom','Receptivo','Live Semanal'];
+DATA.rows = DATA.rows.filter(x => VALID_STAGES.includes(x.etapa));
+DATA.stages = DATA.stages.filter(x => VALID_STAGES.includes(x.etapa));
+const allStages = DATA.stages.map(x=>x.etapa);
+const sf = document.getElementById('stageFilter'), df = document.getElementById('dateFilter');
+allStages.forEach(x=>sf.insertAdjacentHTML('beforeend',`<option value="${x}">${x}</option>`));
+[...new Set(DATA.rows.map(x=>x.data))].forEach(x=>df.insertAdjacentHTML('beforeend',`<option value="${x}">${x}</option>`));
+
+function render(){
+  const s=sf.value,d=df.value;
+  let rows=DATA.rows.filter(x=>(!s||x.etapa===s)&&(!d||x.data===d));
+  let stages=DATA.stages.filter(x=>!s||x.etapa===s);
+  if(d){
+    const map={};
+    rows.forEach(r=>{if(!map[r.etapa])map[r.etapa]={etapa:r.etapa,template:0,msg2:0,j24:0,volume:0,custo:0,pct:0};map[r.etapa].template+=r.template;map[r.etapa].msg2+=r.msg2;map[r.etapa].j24+=r.j24;map[r.etapa].volume+=r.volume;map[r.etapa].custo+=r.custo;});
+    const c=rows.reduce((a,b)=>a+b.custo,0);
+    stages=Object.values(map).map(x=>{x.pct=c?x.custo/c*100:0;return x;});
+  }
+  const cost=rows.reduce((a,b)=>a+b.custo,0)+(d||s?0:(s?0:DATA.stages.find(x=>x.etapa==='Receptivo')?.custo||0));
+  // For "all dates", include Receptivo summary cost/volume. For date-filtered views, Receptivo is not assigned a date.
+  let vol=rows.reduce((a,b)=>a+b.volume,0);
+  if(!d&&!s){vol=DATA.totalVolume;}
+  else if(!d&&s==='Receptivo'){vol=DATA.receptivoVolume;}
+  const k=vol?cost/vol*1000:0;
+  const top=[...stages].sort((a,b)=>b.custo-a.custo)[0];
+  document.getElementById('kCost').textContent=fmtMoney(cost);
+  document.getElementById('kVol').textContent=fmtInt(vol);
+  document.getElementById('kK').textContent=fmtMoney(k);
+  document.getElementById('kTop').textContent=top?top.etapa:'—';
+  document.getElementById('kTopHint').textContent=top?fmtMoney(top.custo):'';
+  document.getElementById('kStages').textContent=fmtInt(stages.filter(x=>x.volume>0).length);
+
+  const maxC=Math.max(...stages.map(x=>x.custo),1), maxV=Math.max(...stages.map(x=>x.volume),1);
+  document.getElementById('costBars').innerHTML=stages.sort((a,b)=>b.custo-a.custo).map(x=>`<div class="barrow"><div>${x.etapa}</div><div class="barbg"><div class="bar" style="width:${x.custo/maxC*100}%"></div></div><div class="num">${fmtMoney(x.custo)}</div></div>`).join('');
+  document.getElementById('volBars').innerHTML=stages.sort((a,b)=>b.volume-a.volume).map(x=>`<div class="barrow"><div>${x.etapa}</div><div class="barbg"><div class="bar alt" style="width:${x.volume/maxV*100}%"></div></div><div class="num">${fmtInt(x.volume)}</div></div>`).join('');
+
+  document.getElementById('insight').innerHTML=top
+    ? `<b>${top.etapa}</b> é a etapa com maior custo, concentrando <b>${fmtMoney(top.custo)}</b> (${top.pct.toFixed(1)}% do custo considerado). O painel agora considera também o <b>Receptivo</b>: R$ 2.808,40 e 56.168 mensagens, derivados da própria planilha.`
+    : 'Sem dados para os filtros selecionados.';
+
+  document.getElementById('stageTable').innerHTML=stages.sort((a,b)=>b.custo-a.custo).map(x=>`<tr class="${x.etapa==='Receptivo'?'receptivo':''}"><td>${x.etapa}</td><td class="num">${fmtInt(x.template)}</td><td class="num">${fmtInt(x.msg2)}</td><td class="num">${fmtInt(x.j24)}</td><td class="num">${fmtInt(x.volume)}</td><td class="num">${fmtMoney(x.custo)}</td><td class="num">${fmtMoney(x.volume?x.custo/x.volume*1000:0)}</td><td class="num">${x.pct.toFixed(1)}%</td></tr>`).join('');
+  document.getElementById('dailyTable').innerHTML=rows.map(x=>`<tr><td>${x.etapa}</td><td>${x.data}</td><td class="num">${fmtInt(x.template)}</td><td class="num">${fmtInt(x.msg2)}</td><td class="num">${fmtInt(x.j24)}</td><td class="num">${fmtInt(x.volume)}</td><td class="num">${fmtMoney(x.custo)}</td></tr>`).join('');
+}
+sf.addEventListener('change',render); df.addEventListener('change',render); render();
+</script>
+</body>
+</html>
