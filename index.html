@@ -18,9 +18,9 @@ table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:12px 9px;
 .status{display:inline-block;padding:6px 9px;border-radius:20px;font-size:10px;font-weight:800}.status.green{background:#e8f6ee}.status.yellow{background:#fff5d9}.status.orange{background:#fff0e5}.status.red{background:#fdeaea}.status.neutral{background:#eef1f5}
 .bars{display:grid;gap:11px}.barrow{display:grid;grid-template-columns:125px 1fr 90px;gap:10px;align-items:center;font-size:11px}.barbg{height:12px;background:#edf0f4;border-radius:20px;overflow:hidden}.bar{height:100%;background:#315efb;border-radius:20px}.barvalue{text-align:right;font-weight:800}
 .alert{padding:13px 14px;border-radius:10px;border-left:4px solid #315efb;background:#f7f9ff;margin-bottom:9px}.alert.yellow{border-left-color:#b77900;background:#fffdf5}.alert.red{border-left-color:#c62828;background:#fff8f8}.alert strong{display:block;font-size:13px;margin-bottom:4px}.alert span{font-size:12px;color:#697586}
-.filters{display:flex;gap:9px;margin-bottom:15px}.filters select{border:1px solid #dfe3e9;border-radius:9px;padding:9px 12px;background:#fff}
+.filters{display:flex;gap:9px;margin:0 0 16px}.filters select{min-width:150px}.filters select{border:1px solid #dfe3e9;border-radius:9px;padding:9px 12px;background:#fff}
 .small{font-size:11px;color:#7b8491;line-height:1.5}.footer{margin-top:25px;font-size:10px;color:#87909b}
-@media(max-width:1000px){.kpis{grid-template-columns:repeat(2,1fr)}.two,.three,.budget-main{grid-template-columns:1fr}}
+@media(max-width:1000px){.kpis{grid-template-columns:repeat(2,1fr)!important}.two,.three,.budget-main{grid-template-columns:1fr}}
 @media(max-width:600px){.wrap{padding:20px 14px}.kpis{grid-template-columns:1fr}.head{display:block}.tag{display:inline-block;margin-top:12px}}
 </style>
 </head>
@@ -30,6 +30,10 @@ table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:12px 9px;
 <div><h1>Custos API — WFIA</h1><div class="sub">Visão executiva de orçamento, consumo, volume e custo • atualizado até 16/11/2026</div></div>
 <div class="tag">BASE MANUAL • PRONTA PARA BIGQUERY</div>
 </div>
+<div class="filters">
+<select id="stageFilter"><option value="">Todas as etapas</option></select>
+<select id="dateFilter"><option value="">Todas as datas</option></select>
+</div>
 
 <div class="section">
 <div class="title">1. Visão geral do orçamento</div>
@@ -38,7 +42,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:12px 9px;
 <div class="card"><div class="label">Consumido</div><div class="value" id="spent"></div><div class="note">Custo acumulado na base</div></div>
 <div class="card"><div class="label">Disponível</div><div class="value green" id="available"></div><div class="note">Saldo do orçamento</div></div>
 <div class="card"><div class="label">% utilizado</div><div class="value" id="usedPct"></div><div class="note">Consumido ÷ orçamento total</div></div>
-<div class="card"><div class="label">Volume total</div><div class="value" id="totalVolume"></div><div class="note">Template + MSG 2 + J24</div></div>
+<div class="card" id="volumeKpiCard"><div class="label">Volume total</div><div class="value" id="totalVolume"></div><div class="note">Template + MSG 2 + J24</div></div>
 </div>
 <div class="card" style="margin-top:15px">
 <div class="label">Consumo do orçamento</div>
@@ -96,17 +100,14 @@ table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:12px 9px;
 
 <div class="section">
 <div class="title">Detalhamento diário</div>
-<div class="filters">
-<select id="stageFilter"><option value="">Todas as etapas</option></select>
-<select id="dateFilter"><option value="">Todas as datas</option></select>
-</div>
+
 <div class="card">
 <table><thead><tr><th>Data</th><th>Etapa</th><th>Template</th><th>MSG 2</th><th>J24</th><th>Volume</th><th>Custo</th></tr></thead>
 <tbody id="daily"></tbody></table>
 </div>
 </div>
 
-<div class="footer">Fonte: CUSTOS API _ LANÇAMENTOS_26 - WFIA (1).csv. Orçamento: Receptivo R$ 8.568; Captação R$ 51.710; Lembrete + Aquecimento R$ 16.493; Evento R$ 44.982; Carrinho R$ 37.753. Total: R$ 159.507.</div>
+<div class="footer">Fonte: CUSTOS API _ LANÇAMENTOS_26 - WFIA (1).csv. Orçamento: Receptivo R$ 8.568; Captação R$ 51.710; Lembrete + Aquecimento R$ 16.493; Evento R$ 44.982; Carrinho R$ 37.753. Total: R$ 159.506.</div>
 </div>
 
 <script>
@@ -115,13 +116,43 @@ const money = v => "R$ " + Number(v||0).toLocaleString("pt-BR",{minimumFractionD
 const num = v => Number(v||0).toLocaleString("pt-BR");
 const percent = v => Number(v||0).toLocaleString("pt-BR",{minimumFractionDigits:1,maximumFractionDigits:1})+"%";
 
-document.getElementById("budgetTotal").textContent=money(DATA.budget_total);
-document.getElementById("spent").textContent=money(DATA.total_cost);
-document.getElementById("available").textContent=money(DATA.available);
-document.getElementById("usedPct").textContent=percent(DATA.used_pct);
-document.getElementById("totalVolume").textContent=num(DATA.total_volume);
-document.getElementById("overallProgress").style.width=Math.min(100,DATA.used_pct)+"%";
-document.getElementById("progressText").innerHTML="<b>"+percent(DATA.used_pct)+"</b> do orçamento consumido • <span class='green'><b>"+money(DATA.available)+"</b> ainda disponível</span>";
+function getSelectedStage(){
+ const selected=document.getElementById("stageFilter")?.value || "";
+ if(!selected) return null;
+ return DATA.stage_health.find(x=>x.stage===selected) || null;
+}
+function updateTopKpis(){
+ const stage=getSelectedStage();
+ const isAll=!stage;
+ const budgetLabel=document.querySelector("#budgetTotal").previousElementSibling;
+ const volumeCard=document.getElementById("volumeKpiCard");
+ const kpiGrid=document.querySelector(".kpis");
+
+ if(isAll){
+   budgetLabel.textContent="Orçamento total";
+   document.getElementById("budgetTotal").textContent=money(DATA.budget_total);
+   document.getElementById("spent").textContent=money(DATA.total_cost);
+   document.getElementById("available").textContent=money(DATA.available);
+   document.getElementById("usedPct").textContent=percent(DATA.used_pct);
+   document.getElementById("totalVolume").textContent=num(DATA.total_volume);
+   volumeCard.style.display="block";
+   kpiGrid.style.gridTemplateColumns="repeat(5,1fr)";
+   document.getElementById("overallProgress").style.width=Math.min(100,DATA.used_pct)+"%";
+   document.getElementById("progressText").innerHTML="<b>"+percent(DATA.used_pct)+"</b> do orçamento consumido • <span class='green'><b>"+money(DATA.available)+"</b> ainda disponível</span>";
+ }else{
+   budgetLabel.textContent="Orçamento da etapa";
+   document.getElementById("budgetTotal").textContent=stage.budget===null?"Sem orçamento":money(stage.budget);
+   document.getElementById("spent").textContent=money(stage.cost);
+   document.getElementById("available").textContent=stage.available===null?"—":money(stage.available);
+   document.getElementById("usedPct").textContent=stage.pct===null?"—":percent(stage.pct);
+   volumeCard.style.display="none";
+   kpiGrid.style.gridTemplateColumns="repeat(4,1fr)";
+   document.getElementById("overallProgress").style.width=stage.pct===null?"0%":Math.min(100,stage.pct)+"%";
+   document.getElementById("progressText").innerHTML=stage.pct===null
+      ? "<b>Sem orçamento definido</b> para esta etapa"
+      : "<b>"+percent(stage.pct)+"</b> do orçamento da etapa consumido • <span class='green'><b>"+money(stage.available)+"</b> ainda disponível</span>";
+ }
+}
 
 function statusClass(x){return x.cls}
 function statusIcon(x){return x.cls==="green"?"🟢":x.cls==="yellow"?"🟡":x.cls==="orange"?"🟠":x.cls==="red"?"🔴":"⚪"}
@@ -160,16 +191,22 @@ document.getElementById("c7sent").textContent=num(DATA.c7_manual.sent);
 document.getElementById("c7bc").textContent=num(DATA.c7_manual.broadcasts);
 
 const sf=document.getElementById("stageFilter"), df=document.getElementById("dateFilter");
-DATA.stage_health.forEach(x=>{let o=document.createElement("option");o.value=x.stage;o.textContent=x.stage;sf.appendChild(o)});
+DATA.stage_health.forEach(x=>{let o=document.createElement("option");o.value=x.stage;o.textContent=x.stage;o.title=x.stage;sf.appendChild(o)});
 [...new Set(DATA.rows.map(x=>x.date))].forEach(x=>{let o=document.createElement("option");o.value=x;o.textContent=x;df.appendChild(o)});
 
 function renderDaily(){
  const s=sf.value, dt=df.value;
- const rows=DATA.rows.filter(x=>(!s||x.stage===s)&&(!dt||x.date===dt));
+ const rows=DATA.rows.filter(x=>{
+   const stageMatch=!s
+     || x.stage===s
+     || (s==="Lembrete + Aquecimento" && (x.stage==="Lembrete" || x.stage==="Aquecimento"));
+   return stageMatch && (!dt||x.date===dt);
+ });
  document.getElementById("daily").innerHTML=rows.map(x=>`
  <tr><td>${x.date}</td><td><b>${x.stage}</b></td><td>${num(x.template)}</td><td>${num(x.msg2)}</td><td>${num(x.j24)}</td><td><b>${num(x.volume)}</b></td><td>${money(x.cost)}</td></tr>`).join("");
+ updateTopKpis();
 }
-sf.addEventListener("change",renderDaily);df.addEventListener("change",renderDaily);renderDaily();
+sf.value=""; df.value=""; sf.addEventListener("change",renderDaily);df.addEventListener("change",renderDaily);renderDaily();
 </script>
 </body>
 </html>
